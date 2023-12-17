@@ -1,0 +1,160 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model Avatar {
+    id   String @id @default(cuid())
+    url  String
+    User User[]
+}
+
+model Role {
+    id   String @id @default(cuid())
+    name String
+    User User[]
+}
+
+model User {
+    id            String  @id @default(cuid())
+    email         String  @unique
+    username      String  @unique
+    name          String?
+    surname       String?
+    company       String?
+    about         String?
+    isReadyToWork Boolean @default(false)
+
+    solvedTaskCount Int @default(0)
+    score           Int @default(0)
+
+    avatarId String @default("clo5ivhlk0000nvr0nfyq02wh")
+    avatar   Avatar @relation(fields: [avatarId], references: [id])
+
+    roleId String @default("clo5j32d10000nv1gllg0ddme")
+    role   Role   @relation(fields: [roleId], references: [id])
+
+    activationCode String?  @default(cuid())
+    password       String
+    createdAt      DateTime @default(now())
+
+    Task          Task[]
+    TaskSolution  TaskSolution[]
+    Comment       Comment[]
+    CommentReport CommentReport[]
+    Message       Message[]
+}
+
+model TaskComplexity {
+    id   String @id @default(cuid())
+    name String
+    Task Task[]
+}
+
+model TaskLanguage {
+    taskId String
+    task   Task   @relation("TaskLanguage", fields: [taskId], references: [id], onDelete: Cascade)
+
+    languageId String
+    language   Language @relation(fields: [languageId], references: [id])
+
+    unitTestsPath String
+    codeSnippet   String
+
+    @@id([taskId, languageId])
+}
+
+model Language {
+    id    String         @id @default(cuid())
+    name  String
+    tasks TaskLanguage[]
+}
+
+model Task {
+    id          String @id @default(cuid())
+    title       String
+    description String
+    authorId    String
+    author      User   @relation(fields: [authorId], references: [id])
+
+    taskComplexityId String
+    complexity       TaskComplexity @relation(fields: [taskComplexityId], references: [id])
+
+    languages TaskLanguage[] @relation("TaskLanguage")
+
+    isAccepted   Boolean        @default(false)
+    createdAt    DateTime       @default(now())
+    soledTimes   Int            @default(0)
+    viewsCount   Int            @default(0)
+    TaskSolution TaskSolution[] @relation("TaskSolution")
+    Comment      Comment[]      @relation("Comment")
+}
+
+model TaskSolution {
+    id   String @id @default(cuid())
+    code String
+
+    authorId String
+    author   User   @relation(fields: [authorId], references: [id])
+
+    taskId String
+    task   Task   @relation("TaskSolution", fields: [taskId], references: [id], onDelete: Cascade)
+
+    language String @default("python")
+
+    likeCount Int      @default(0)
+    createdAt DateTime @default(now())
+}
+
+model Comment {
+    id   String @id @default(cuid())
+    text String
+
+    authorId String
+    author   User   @relation(fields: [authorId], references: [id])
+
+    taskId String
+    task   Task   @relation("Comment", fields: [taskId], references: [id], onDelete: Cascade)
+
+    createdAt     DateTime        @default(now())
+    CommentReport CommentReport[]
+}
+
+model CommentReport {
+    id   String @id @default(cuid())
+    text String
+
+    authorId String
+    author   User   @relation(fields: [authorId], references: [id])
+
+    commentId String
+    comment   Comment @relation(fields: [commentId], references: [id])
+
+    createdAt DateTime @default(now())
+}
+
+model Discussion {
+    id       String    @id @default(cuid())
+    topic    String
+    messages Message[] @relation("DiscussionMessages")
+}
+
+model Message {
+    id   String @id @default(cuid())
+    text String
+
+    authorId String
+    author   User   @relation(fields: [authorId], references: [id])
+
+    discussionId String
+    discussion   Discussion @relation("DiscussionMessages", fields: [discussionId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+}

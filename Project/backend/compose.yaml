@@ -1,0 +1,23 @@
+name: codepilot
+services:
+    backend:
+        build: .
+        container_name: codepilot-backend
+        networks:
+            - server-side
+            - client-side
+        ports:
+            - 3000:3000
+        volumes:
+            # - ./codepilot-temp:/usr/src/app/public/temp
+            - ./public/temp:/usr/src/app/public/temp
+            - /var/run/docker.sock:/var/run/docker.sock
+
+networks:
+    client-side: {}
+    server-side: {}
+
+volumes:
+  # codepilot-temp:
+  # public/temp:
+  temp-tests:
